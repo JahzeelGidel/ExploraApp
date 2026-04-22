@@ -1,8 +1,21 @@
 package com.jahzeelCubides.exploraapp
 
+import android.R
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,19 +24,33 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.jahzeelCubides.exploraapp.ui.theme.ExploraAppTheme
 
 
@@ -32,8 +59,15 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+
+    val auth = Firebase.auth
+
+    val activity = LocalView.current.context as Activity
+
+    var inputEmail by remember { mutableStateOf("") }
+    var inputPassword by remember { mutableStateOf("") }
+
+    var loginError by remember { mutableStateOf("") }
 
     val primaryOrange = Color(0xFFE45D25)
     val lightGrayBg = Color(0xFFF8F9FE)
@@ -49,20 +83,17 @@ fun LoginScreen(
                 .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header Image with Rounded Corners
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(280.dp)
                     .clip(RoundedCornerShape(bottomStart = 60.dp, bottomEnd = 60.dp))
             ) {
-                // Placeholder for the landscape image
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.LightGray)
                 )
-
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -122,14 +153,16 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
-                    value = email,
-                    onValueChange = { email = it },
+                    value = inputEmail,
+                    onValueChange = { inputEmail = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
                         .clip(RoundedCornerShape(28.dp)),
                     placeholder = { Text("nombre@ejemplo.com", color = Color.Gray) },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray)
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = inputBg,
                         unfocusedContainerColor = inputBg,
@@ -163,15 +196,19 @@ fun LoginScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = inputPassword,
+                    onValueChange = { inputPassword = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
                         .clip(RoundedCornerShape(28.dp)),
                     placeholder = { Text("........", color = Color.Gray) },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray) },
-                    trailingIcon = { Icon(Icons.Default.Home, contentDescription = null, tint = Color.Gray) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray)
+                    },
+                    trailingIcon = {
+                        Icon(Icons.Default.Home, contentDescription = null, tint = Color.Gray)
+                    },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     colors = TextFieldDefaults.colors(
@@ -186,25 +223,57 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+
+                if (!loginError.equals("")){
+                    Text(
+                        text = loginError,
+                        color = Color.Red,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+                }
+
+
+
+
                 Button(
-                    onClick = { onLoginSuccess() },
+                    onClick = {
+
+                        auth.signInWithEmailAndPassword(inputEmail, inputPassword)
+                            .addOnCompleteListener(activity) { task ->
+                                if (task.isSuccessful) {
+                                    onLoginSuccess()
+                                } else {
+
+                                    loginError = "Error al iniciar sesión"
+                                }
+                            }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryOrange),
                     contentPadding = PaddingValues()
                 ) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                           ,
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Iniciar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "Iniciar Sesión",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }
@@ -215,7 +284,11 @@ fun LoginScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), thickness = 0.5.dp, color = Color.LightGray)
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 0.5.dp,
+                        color = Color.LightGray
+                    )
                     Text(
                         text = " O CONTINUAR CON ",
                         fontSize = 12.sp,
@@ -223,7 +296,11 @@ fun LoginScreen(
                         color = Color.Gray,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
-                    HorizontalDivider(modifier = Modifier.weight(1f), thickness = 0.5.dp, color = Color.LightGray)
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 0.5.dp,
+                        color = Color.LightGray
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -257,7 +334,11 @@ fun LoginScreen(
 }
 
 @Composable
-fun SocialButton(text: String, modifier: Modifier = Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+fun SocialButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
     OutlinedButton(
         onClick = { /* Handle social login */ },
         modifier = modifier.height(50.dp),
@@ -275,7 +356,7 @@ fun SocialButton(text: String, modifier: Modifier = Modifier, icon: androidx.com
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    ExploraAppTheme(){
+    ExploraAppTheme {
         LoginScreen(onLoginSuccess = {}, onNavigateToRegister = {})
     }
 }
