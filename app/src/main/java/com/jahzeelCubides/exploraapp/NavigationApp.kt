@@ -6,38 +6,50 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @Composable
 fun NavigationApp() {
-    val myNavController = rememberNavController()
+    val auth = Firebase.auth
+    val currentUser = auth.currentUser
+    val startDestination = if (currentUser != null) "home" else "login"
 
+    val navController = rememberNavController()
     NavHost(
-        navController = myNavController,
-        startDestination = "login",
+        navController = navController,
+        startDestination = startDestination,
         modifier = Modifier.fillMaxSize()
     ) {
-        composable(route = "login") {
-            LoginScreen(
-                onNavigateToRegister = {
-                    myNavController.navigate(route = "register")
-                }, onLoginSuccess = {
-                    myNavController.navigate("home")
+        composable(route = "home") {
+            HomeScreen(
+                onClickLogout = {
+                    navController.navigate(route = "login") {
+                        popUpTo(id = 0) { inclusive = true }
+                    }
                 }
             )
         }
 
         composable(route = "register") {
             RegisterScreen(
-                onRegisterSuccess = {},
-                onNavigateToLogin = {},
                 onBackClick = {
-                    myNavController.navigate(route = "login")
+                    navController.popBackStack()
+                },
+                onRegisterSuccess = {
+                    navController.navigate(route = "home") {
+                        popUpTo(id = 0) { inclusive = true }
+                    }
                 }
             )
         }
 
-        composable("home") {
-            HomeScreen()
+        composable(route = "login") {
+            LoginScreen(onLoginSuccess={}, onNavigateToRegister={
+                navController.navigate("register")
+            })
         }
     }
 }
+
+

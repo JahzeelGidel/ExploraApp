@@ -1,5 +1,6 @@
 package com.jahzeelCubides.exploraapp
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -56,28 +58,40 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.common.util.CollectionUtils.listOf
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.auth
 import com.jahzeelCubides.exploraapp.ui.theme.ExploraAppTheme
 
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit,
-    modifier: Modifier = Modifier,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onRegisterSuccess: () -> Unit = {}
 ) {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    val auth = Firebase.auth
+    val activity = LocalView.current.context as Activity
+
+    var inputName by remember { mutableStateOf("") }
+    var inputEmail by remember { mutableStateOf("") }
+    var inputPassword by remember { mutableStateOf("") }
+    var inputPasswordConfirmation by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
+
+    var nameError by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+    var passwordConfirmationError by remember { mutableStateOf("") }
+    var registerError by remember { mutableStateOf("") }
 
     val primaryOrange = Color(0xFFE45D25)
     val lightGrayBg = Color(0xFFF8F9FE)
     val inputBg = Color(0xFFE5E5EA)
 
     Surface(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         color = lightGrayBg
     ) {
         Column(
@@ -133,47 +147,79 @@ fun RegisterScreen(
             Column(modifier = Modifier.fillMaxWidth()) {
                 RegisterField(
                     label = "NOMBRE COMPLETO",
-                    value = name,
-                    onValueChange = { name = it },
+                    value = inputName,
+                    onValueChange = { inputName = it },
                     placeholder = "Tu nombre",
                     leadingIcon = Icons.Default.Person,
                     inputBg = inputBg
                 )
+                if (!nameError.equals("")) {
+                    Text(
+                        text = nameError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 RegisterField(
                     label = "CORREO ELECTRÓNICO",
-                    value = email,
-                    onValueChange = { email = it },
+                    value = inputEmail,
+                    onValueChange = { inputEmail = it },
                     placeholder = "hola@ejemplo.com",
                     leadingIcon = Icons.Default.Email,
                     inputBg = inputBg
                 )
+                if (!emailError.equals("")) {
+                    Text(
+                        text = emailError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 RegisterField(
                     label = "CONTRASEÑA",
-                    value = password,
-                    onValueChange = { password = it },
+                    value = inputPassword,
+                    onValueChange = { inputPassword = it },
                     placeholder = "........",
                     leadingIcon = Icons.Default.Lock,
                     inputBg = inputBg,
                     isPassword = true
                 )
+                if (!passwordError.equals("")) {
+                    Text(
+                        text = passwordError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 RegisterField(
                     label = "CONFIRMAR",
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
+                    value = inputPasswordConfirmation,
+                    onValueChange = { inputPasswordConfirmation = it },
                     placeholder = "........",
                     leadingIcon = Icons.Default.Refresh,
                     inputBg = inputBg,
                     isPassword = true
                 )
+                if (passwordConfirmationError.equals("")) {
+                    Text(
+                        text = passwordConfirmationError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -204,7 +250,34 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { onRegisterSuccess() },
+                onClick = {
+                    val isValidName = validateName(inputName).first
+                    val isValidEmail = validateEmail(inputEmail).first
+                    val isValidPassword = validatePassword(inputPassword).first
+                    val isValidConfirmPassword = validateConfirmPassword(inputPassword, inputPasswordConfirmation).first
+
+                    nameError = validateName(inputName).second
+                    emailError = validateEmail(inputEmail).second
+                    passwordError = validatePassword(inputPassword).second
+                    passwordConfirmationError = validateConfirmPassword(inputPassword, inputPasswordConfirmation).second
+
+                    if (isValidName && isValidEmail && isValidPassword && isValidConfirmPassword) {
+                        auth.createUserWithEmailAndPassword(inputEmail, inputPassword)
+                            .addOnCompleteListener(activity) { task ->
+                                if (task.isSuccessful) {
+                                    onRegisterSuccess()
+                                } else {
+                                    registerError = when (task.exception) {
+                                        is FirebaseAuthInvalidCredentialsException -> "Correo inválido"
+                                        is FirebaseAuthUserCollisionException -> "Este correo ya está registrado"
+                                        else -> "Hubo un error en el registro"
+                                    }
+                                }
+                            }
+                    } else {
+                        registerError = "Hubo un error en el registro"
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
@@ -215,15 +288,33 @@ fun RegisterScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        ,
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(primaryOrange, Color(0xFFFF8A65))
+                            )
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Registrarse", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(24.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
+            }
+
+            if (registerError.equals("")) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = registerError,
+                    color = Color.Red,
+                    fontSize = 13.sp,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -270,7 +361,7 @@ fun RegisterScreen(
                     color = primaryOrange,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigateToLogin() }
+                    modifier = Modifier.clickable { onBackClick() }
                 )
             }
         }
@@ -319,10 +410,11 @@ fun RegisterField(
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview() {
     ExploraAppTheme {
-        RegisterScreen(onRegisterSuccess = {}, onNavigateToLogin = {})
+        RegisterScreen(onBackClick = {},onRegisterSuccess = {})
     }
 }

@@ -67,4 +67,5 @@ dependencies {
 
     //auth
     implementation(libs.firebase.auth)
+
 }

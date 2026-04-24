@@ -1,5 +1,6 @@
 [versions]
 agp = "8.12.3"
+builder = "8.12.3"
 firebaseBom = "34.12.0"
 kotlin = "2.0.21"
 coreKtx = "1.18.0"
@@ -15,6 +16,7 @@ firebaseAuth = "23.1.0"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+builder = { module = "com.android.tools.build:builder", version.ref = "builder" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
