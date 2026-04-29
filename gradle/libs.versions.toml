@@ -15,6 +15,7 @@ firebaseAuth = "23.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-viewmodel-iossimulatorarm64 = { module = "androidx.lifecycle:lifecycle-viewmodel-iossimulatorarm64", version.ref = "lifecycleRuntimeKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 builder = { module = "com.android.tools.build:builder", version.ref = "builder" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

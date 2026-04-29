@@ -1,3 +1,10 @@
+val Any.iossimulatorarm64: kotlin.Any
+
+val org.gradle.accessors.dm.LibrariesForLibs.AndroidxLifecycleLibraryAccessors.viewmodel: kotlin.Any
+
+
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -67,5 +74,7 @@ dependencies {
 
     //auth
     implementation(libs.firebase.auth)
+
+    implementation(libs.androidx.lifecycle.viewmodel.iossimulatorarm64)
 
 }
