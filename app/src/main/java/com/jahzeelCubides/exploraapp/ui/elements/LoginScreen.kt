@@ -190,7 +190,7 @@ fun LoginScreen(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = primaryOrange,
-                        modifier = Modifier.clickable { /* Handle forgot password */ }
+                        modifier = Modifier.clickable {}
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))

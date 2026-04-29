@@ -25,7 +25,7 @@ fun HomeScreen(
             TopAppBar(title = { Text("Explora Colombia") })
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = AddTouristicPlaceScreen) {
+            FloatingActionButton(onClick = onNavigateToAddPlace) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
         }

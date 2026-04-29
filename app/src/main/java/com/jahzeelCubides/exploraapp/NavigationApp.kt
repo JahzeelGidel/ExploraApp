@@ -52,10 +52,16 @@ fun NavigationApp() {
                     navController.navigate(route = "login") {
                         popUpTo(id = 0) { inclusive = true }
                     }
-                })
+                },
+                onNavigateToAddPlace = {
+                    navController.navigate(route = "AddTouristicPlaceScreen")
+                }
+            )
         }
         composable(route = "AddTouristicPlaceScreen") {
-            AddTouristicPlaceScreen()
+            AddTouristicPlaceScreen(
+
+            )
         }
     }
 }
