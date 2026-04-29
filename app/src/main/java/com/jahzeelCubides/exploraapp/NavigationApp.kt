@@ -8,6 +8,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.jahzeelCubides.exploraapp.ui.elements.AddTouristicPlaceScreen
+import com.jahzeelCubides.exploraapp.ui.elements.HomeScreen
+import com.jahzeelCubides.exploraapp.ui.elements.LoginScreen
+import com.jahzeelCubides.exploraapp.ui.elements.RegisterScreen
 
 @Composable
 fun NavigationApp() {
@@ -21,15 +25,7 @@ fun NavigationApp() {
         startDestination = startDestination,
         modifier = Modifier.fillMaxSize()
     ) {
-        composable(route = "home") {
-            HomeScreen(
-                onClickLogout = {
-                    navController.navigate(route = "login") {
-                        popUpTo(id = 0) { inclusive = true }
-                    }
-                }
-            )
-        }
+
 
         composable(route = "register") {
             RegisterScreen(
@@ -45,11 +41,26 @@ fun NavigationApp() {
         }
 
         composable(route = "login") {
-            LoginScreen(onLoginSuccess={}, onNavigateToRegister={
+            LoginScreen(onLoginSuccess = {}, onNavigateToRegister = {
                 navController.navigate("register")
             })
         }
+
+        composable(route = "home") {
+            HomeScreen(
+                onClickLogout = {
+                    navController.navigate(route = "login") {
+                        popUpTo(id = 0) { inclusive = true }
+                    }
+                })
+        }
+        composable(route = "AddTouristicPlaceScreen") {
+            AddTouristicPlaceScreen()
+        }
     }
 }
+
+
+
 
 
